@@ -47,7 +47,9 @@ export default function AddDeviceRoom({ navigation }) {
         firebase.database().ref('/listRooms/' + node + '/listBulbs/' + id).set({
             bulbsID: id,
             bulbsName: bulbsNameParam,
-            status: false
+            status: false,
+            valueF: "0",
+            valueS: "0"
         })
     }
 
@@ -127,7 +129,7 @@ export default function AddDeviceRoom({ navigation }) {
                         onPress={() => {
                             if (bulbsName != '' && !resBulb.includes('B' + bulbsName)) {
                                 let tmp = resBulb;
-                                tmp.push('B' + bulbsName);
+                                tmp.push(bulbsName);
                                 setResBulb(tmp);
                                 setToogle(!toogle);
                                 setBulbsName('');
@@ -197,7 +199,7 @@ export default function AddDeviceRoom({ navigation }) {
                             if (roomName == '' || sensorID == '') Alert.alert('OOPS', 'Enter your room name and sensor id');
                             else {
                                 let id = uuid.v4();
-                                addRoomData(roomName, 'S' + sensorID, id);
+                                addRoomData(roomName, sensorID, id);
                                 resBulb.map(item => addBulbData(item, id));
                                 navigation.navigate('ManageDevice')
                             }
