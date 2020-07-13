@@ -20,11 +20,17 @@ export default function AddDeviceRoom({ navigation }) {
     const [bulbsName, setBulbsName] = useState('');
     const [roomName, setRoomName] = useState('');
     const [sensorID, setSensorID] = useState('');
+    const [listSensors, setListSensors] = useState([]);
 
     useEffect(() => {
         firebase.database().ref('/listRooms').once('value', (snap) => {
             if (snap.val() != null) {
                 setRooms(Object.entries(snap.val()).map(item => item[1].roomsName));
+            }
+        });
+        firebase.database().ref('/listSensors').once('value', (snap)=>{
+            if (snap.val() != null) {
+                setListSensors(Object.entries(snap.val()).map(item => item[0]));
             }
         });
     }, []);
@@ -52,6 +58,24 @@ export default function AddDeviceRoom({ navigation }) {
             valueS: "0"
         })
     }
+
+    const addSensorData = (idParam) => {
+        var time = new Date();
+        var currentDate = time.toISOString().split('T')[0];
+        var currentTime = time.toLocaleTimeString('en-US', { hour12: false });
+        
+        firebase.database().ref('/listSensors/'+ idParam).set({
+            device_id: idParam,
+            values: "0",
+            sensorHistory: {
+                [currentDate]: {
+                    [currentTime]: "1",
+                    [time.getHours()+":"+time.getMinutes()+":"+(time.getSeconds()+1)]: "0",
+                }
+            }
+        })
+    }
+    
 
     if (fontLoaded) {
         return (
@@ -127,13 +151,14 @@ export default function AddDeviceRoom({ navigation }) {
                 <View style={styles.boxThree}>
                     <TouchableOpacity
                         onPress={() => {
-                            if (bulbsName != '' && !resBulb.includes('B' + bulbsName)) {
+                            if (bulbsName != '' && !resBulb.includes(bulbsName)) {
                                 let tmp = resBulb;
                                 tmp.push(bulbsName);
                                 setResBulb(tmp);
                                 setToogle(!toogle);
                                 setBulbsName('');
                             }
+                            else Alert.alert('OOPS', 'Bulb duplicates');
 
                         }}
                         style={{
@@ -197,9 +222,11 @@ export default function AddDeviceRoom({ navigation }) {
                     <TouchableOpacity
                         onPress={() => {
                             if (roomName == '' || sensorID == '') Alert.alert('OOPS', 'Enter your room name and sensor id');
+                            else if(listSensors.includes(sensorID) ) Alert.alert('OOPS', 'Sensor id has been existed');
                             else {
                                 let id = uuid.v4();
                                 addRoomData(roomName, sensorID, id);
+                                addSensorData(sensorID);
                                 resBulb.map(item => addBulbData(item, id));
                                 navigation.navigate('ManageDevice')
                             }

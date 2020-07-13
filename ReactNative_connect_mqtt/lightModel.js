@@ -12,11 +12,11 @@ function lightModel(obj) {
     console.log(time);
     var currentDate = time.toISOString().split('T')[0];
     console.log(currentDate);
-    var currentTime = time.toLocaleTimeString();
+    var currentTime = time.toLocaleTimeString('en-US', { hour12: false });
     console.log(currentTime);
-    var dateAndTime = currentDate+ " " + currentTime;
-    database.ref('listSensors/' + obj.device_id +"/sensorHistory").update({
-        [dateAndTime]: obj.values[0]
+    //var dateAndTime = currentDate+ " " + currentTime;
+    database.ref('listSensors/' + obj.device_id +"/sensorHistory/"+ currentDate).update({
+        [currentTime]: obj.values[0]
     });
 
     // function writeSensorData(obj) {

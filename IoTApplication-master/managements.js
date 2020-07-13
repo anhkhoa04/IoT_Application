@@ -99,7 +99,8 @@ var DListRoomOfUser = [];
 var DListhistory = [];
 //var DListIdRoom = [];
 var nameOfRoom = '', DListNameRoom = [];
-var DSystemHistory = [], listSystemHistory = [], arrayDate = [], arrayLevelLight = [];
+//var DSystemHistory = [], listSystemHistory = [];
+
 
 // function data() {
 
@@ -146,7 +147,7 @@ function ReadUserData(id) {
       DBulbs = roomDataOfUser.map((item) => {
         for (var name of DListNameRoom) {
           if (item[1].roomsName == name) {
-            return [item[1].roomsID, item[1].roomsName, item[1].listBulbs];
+            return [item[1].roomsID, item[1].roomsName, item[1].listBulbs, item[1].lightSensorID];
           }
         }
         return null;
@@ -167,33 +168,34 @@ function ReadUserData(id) {
         return obj != null;
       });
       //-----------------------------------------------------------------------------------
-      DSystemHistory = roomDataOfUser.map((item) => {
-        for (var name of DListNameRoom) {
-          if (item[1].roomsName == name) {
-            if (item[1].listSystemHistory != undefined) {
-              return item[1].listSystemHistory;
-            }
-            else {
-              return {};
-            }
-          }
-        }
-        return null;
-      });
-      DSystemHistory = DSystemHistory.filter(function (obj) {
-        return obj != null;
-      });
-      listSystemHistory = Object.entries(DSystemHistory[DListNameRoom.indexOf(nameOfRoom)]).map(item => item[1]);
-      for (var sys of listSystemHistory) {
-        arrayDate.push(sys.dateTime);
-      }
-      for (var sys of listSystemHistory) {
-        arrayLevelLight.push(sys.levelLight);
-      }
+      // DSystemHistory = roomDataOfUser.map((item) => {
+      //   for (var name of DListNameRoom) {
+      //     if (item[1].roomsName == name) {
+      //       if (item[1].listSystemHistory != undefined) {
+      //         return item[1].listSystemHistory;
+      //       }
+      //       else {
+      //         return {};
+      //       }
+      //     }
+      //   }
+      //   return null;
+      // });
+      // DSystemHistory = DSystemHistory.filter(function (obj) {
+      //   return obj != null;
+      // });
+      // listSystemHistory = Object.entries(DSystemHistory[DListNameRoom.indexOf(nameOfRoom)]).map(item => item[1]);
+      // for (var sys of listSystemHistory) {
+      //   arrayTime.push(sys.dateTime);
+      // }
+      // for (var sys of listSystemHistory) {
+      //   arrayLevelLight.push(sys.levelLight);
+      // }
     }
-    // console.log('===============aa============');
+    // console.log('===============SystemHIstory============');
     // console.log(listSystemHistory);
-    //console.log(Object.entries(DSystemHistory[DListIdRoom.indexOf(idRoom)]).map(item => item[1]));
+    // console.log("---------------------------------");
+    // console.log(DSystemHistory);
   });
 
   // for(var i =0;i<listroomID.length;i=i+1){
@@ -336,21 +338,6 @@ function VDevice({ item }) {
 }
 
 function RoomScreen({ route, navigation }) {
-  const [valuesSensor, setValuesSensor] = useState('');
- 
-  /*MUST CREATE A FUNCTION TO CALL SET FUNCTION OF USE STATE WITH IF STATEMENT
-  TO READ CHANGED DATA ON FIREBASE*/
-  const handleGetValue = (value) =>{
-    if(value != valuesSensor){
-      setValuesSensor(value);
-    }
-  }
-  //var valuesSensor = ''; 
-  firebase.database().ref('listSensors/' + 'Light_01').on('value', function (snapshot) { 
-    handleGetValue(snapshot.val().values);
-    console.log(valuesSensor);
-  });
-
   const [serialRoom, setSerialRoom] = useState(0);
   const numcol = 4;
   let loadpage = false;
@@ -361,6 +348,19 @@ function RoomScreen({ route, navigation }) {
   const [togglebulb, setTogglebulb] = useState(false);
   const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
+  const [valuesSensor, setValuesSensor] = useState('');
+  /*MUST CREATE A FUNCTION TO CALL SET FUNCTION OF USE STATE WITH IF STATEMENT
+  TO READ CHANGED DATA ON FIREBASE*/
+  const handleGetValue = (value) =>{
+    if(value != valuesSensor){
+      setValuesSensor(value);
+    }
+  }
+  //var valuesSensor = ''; 
+  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3]).on('value', function (snapshot) { 
+    handleGetValue(snapshot.val().values);
+    //console.log(valuesSensor);
+  });
   // let bulbRootTmp = DListRoomOfUser.find(item => {
   //   if (item[1].roomsName == DBulbs[0][1]) return item[0];
   // });
@@ -452,7 +452,7 @@ function RoomScreen({ route, navigation }) {
             nameOfRoom = [];
             DSystemHistory = [];
             listSystemHistory = [];
-            arrayDate = [];
+            //arrayTime = [];
             arrayLevelLight = [];
             navi.navigate('Home');
           }}
@@ -503,8 +503,11 @@ function RoomScreen({ route, navigation }) {
           onValueChange={toggleSwitch}
           value={isEnabled}
         /> */}
-        <Text style={{fontSize: 80}}>
-
+        <Text style={{fontSize: 18, fontFamily: 'google-bold', color: '#404040'}}>
+          {DBulbs[serialRoom][3]}
+        </Text>
+        <Text style={{fontSize: 30, color: '#404040' }}>
+          {valuesSensor}
         </Text>
       </View>
       {/* <View
@@ -549,8 +552,9 @@ function RoomScreen({ route, navigation }) {
                 style={{ width: 250, height: 30, alignSelf:'center' }}
                 maximumValue={255}
                 minimumValue={0}
-                minimumTrackTintColor="#307ecc"
+                minimumTrackTintColor="#FFE671"
                 maximumTrackTintColor="#000000"
+                thumbTintColor="#F4A05A"
                 step={1}
                 value={parseInt(item.valueS)}
                 onValueChange={(bright) => {
@@ -718,7 +722,7 @@ function RoomScreen({ route, navigation }) {
               nameOfRoom = [];
               DSystemHistory = [];
               listSystemHistory = [];
-              arrayDate = [];
+              //arrayTime = [];
               arrayLevelLight = [];
               navi.navigate('Home');
             }}
@@ -877,7 +881,7 @@ function Account() {
               nameOfRoom = [];
               DSystemHistory = [];
               listSystemHistory = [];
-              arrayDate = [];
+              //arrayTime = [];
               arrayLevelLight = [];
               navi.navigate('Home')
             }}
@@ -1041,11 +1045,12 @@ const chartConfig = {
   color: (opacity = 1) => `rgba(92, 92, 92, ${opacity})`,
   barPercentage: 0.5,
 };
+
 var data = {
-  labels: arrayDate,
+  labels: [],
   datasets: [
     {
-      data: arrayLevelLight
+      data: []
     }
   ]
 };
@@ -1100,36 +1105,73 @@ const CustomListview = ({ itemList }) => (
 
 function History() {
   const [serialRoom, setSerialRoom] = useState(0);
+  const [sensorHistory, setSensorHistory] = useState({});
+  
+  const handleGetValue = (value) =>{
+    if( !(JSON.stringify(value) === JSON.stringify(sensorHistory))){
+      setSensorHistory(value);
+    }
+  }
+  var time = new Date();
+  var currentDate = time.toISOString().split('T')[0];
+  //var valuesSensor = ''; 
+  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] +"/sensorHistory/" + currentDate).on('value', function (snapshot) { 
+    console.log(snapshot.val());
+    handleGetValue(snapshot.val());
+  });
+  arrayTime = Object.entries(sensorHistory).map(item => item[0]);
+  arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
+  console.log(Object.entries(sensorHistory).map(item => item[1]) );
+  data = {
+    labels: arrayTime,
+    datasets: [
+      {
+        data: arrayLevelLight
+      }
+    ]
+  };
+
   const [nameRoom, setNameRoom] = useState(DListRoomOfUser.length != 0 ? DBulbs[0][1] : '');
   const changeRoomLeft = () => {
     if (serialRoom > 0) {
       setNameRoom(DListRoomOfUser.length != 0 ? DBulbs[serialRoom - 1][1] : '');
       setSerialRoom(serialRoom - 1);
       nameOfRoom = DListRoomOfUser.length != 0 ? DBulbs[serialRoom - 1][1] : '';
-      DListhistory = DListRoomOfUser.length != 0 ? Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
-        DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
-        {
-          "history": {
-            "action": "",
-            "dateTime": "null",
-            "room": "",
-            "status": ""
-          },
-        }).map(item => item[1]) : [];
-      //----------------------------------------------------------------------------------------------------
-      listSystemHistory = DListRoomOfUser.length != 0 ? Object.entries(DSystemHistory[DListNameRoom.indexOf(nameOfRoom)]).map(item => item[1]) : [];
+      // DListhistory = DListRoomOfUser.length != 0 ? Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
+      //   DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
+      //   {
+      //     "history": {
+      //       "action": "",
+      //       "dateTime": "null",
+      //       "room": "",
+      //       "status": ""
+      //     },
+      //   }).map(item => item[1]) : [];
+      // //----------------------------------------------------------------------------------------------------
+      // listSystemHistory = DListRoomOfUser.length != 0 ? Object.entries(DSystemHistory[DListNameRoom.indexOf(nameOfRoom)]).map(item => item[1]) : [];
       //console.log(DListhistory);
-      arrayDate.length = 0;
-      arrayLevelLight.length = 0;
+      // arrayTime.length = 0;
+      // arrayLevelLight.length = 0;
       if (DListRoomOfUser.length != 0) {
-        for (var sys of listSystemHistory) {
-          arrayDate.push(sys.dateTime);
-        }
-        for (var sys of listSystemHistory) {
-          arrayLevelLight.push(sys.levelLight);
-        }
+        var arrayTime = [], arrayLevelLight = [];
+        var time = new Date();
+        var currentDate = time.toISOString().split('T')[0];
+        //var valuesSensor = ''; 
+        firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] +"/sensorHistory/" + currentDate).on('value', function (snapshot) { 
+          console.log(snapshot.val());
+          handleGetValue(snapshot.val());
+        });
+        arrayTime = Object.entries(sensorHistory).map(item => item[0]);
+        arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
+        // for (var sys of listSystemHistory) {
+        //   arrayTime.push(sys.dateTime);
+        // }
+        // for (var sys of listSystemHistory) {
+        //   arrayLevelLight.push(sys.levelLight);
+        // }
+        console.log(arrayTime);
         data = {
-          labels: arrayDate,
+          labels: arrayTime,
           datasets: [
             {
               data: arrayLevelLight
@@ -1144,30 +1186,41 @@ function History() {
       setNameRoom(DListRoomOfUser.length != 0 ? DBulbs[serialRoom + 1][1] : '');
       setSerialRoom(serialRoom + 1);
       nameOfRoom = DListRoomOfUser.length != 0 ? DBulbs[serialRoom + 1][1] : '';
-      DListhistory = DListRoomOfUser.length != 0 ? Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
-        DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
-        {
-          "history": {
-            "action": "",
-            "dateTime": "null",
-            "room": "",
-            "status": ""
-          },
-        }).map(item => item[1]) : [];
-      //------------------------------------------------
-      listSystemHistory = DListRoomOfUser.length != 0 ? Object.entries(DSystemHistory[DListNameRoom.indexOf(nameOfRoom)]).map(item => item[1]) : [];
+      // DListhistory = DListRoomOfUser.length != 0 ? Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
+      //   DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
+      //   {
+      //     "history": {
+      //       "action": "",
+      //       "dateTime": "null",
+      //       "room": "",
+      //       "status": ""
+      //     },
+      //   }).map(item => item[1]) : [];
+      // //------------------------------------------------
+      // listSystemHistory = DListRoomOfUser.length != 0 ? Object.entries(DSystemHistory[DListNameRoom.indexOf(nameOfRoom)]).map(item => item[1]) : [];
       //console.log(listSystemHistory);
-      arrayDate.length = 0;
-      arrayLevelLight.length = 0;
+      // arrayTime.length = 0;
+      // arrayLevelLight.length = 0;
       if (DListRoomOfUser.length != 0) {
-        for (var sys of listSystemHistory) {
-          arrayDate.push(sys.dateTime);
-        }
-        for (var sys of listSystemHistory) {
-          arrayLevelLight.push(sys.levelLight);
-        }
+        var arrayTime = [], arrayLevelLight = [];
+        var time = new Date();
+        var currentDate = time.toISOString().split('T')[0];
+        //var valuesSensor = ''; 
+        firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] +"/sensorHistory/" + currentDate).on('value', function (snapshot) { 
+          console.log(snapshot.val());
+          handleGetValue(snapshot.val());
+        });
+        arrayTime = Object.entries(sensorHistory).map(item => item[0]);
+        arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
+        // for (var sys of listSystemHistory) {
+        //   arrayTime.push(sys.dateTime);
+        // }
+        // for (var sys of listSystemHistory) {
+        //   arrayLevelLight.push(sys.levelLight);
+        // }
+        console.log(arrayTime);
         data = {
-          labels: arrayDate,
+          labels: arrayTime,
           datasets: [
             {
               data: arrayLevelLight
@@ -1231,7 +1284,7 @@ function History() {
             nameOfRoom = [];
             DSystemHistory = [];
             listSystemHistory = [];
-            arrayDate = [];
+            //arrayTime = [];
             arrayLevelLight = [];
             navi.navigate('Home');
           }}
@@ -1378,7 +1431,7 @@ function History() {
             nameOfRoom = [];
             DSystemHistory = [];
             listSystemHistory = [];
-            arrayDate = [];
+            //arrayTime = [];
             arrayLevelLight = [];
             navi.navigate('Home');
           }}
