@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Slider,Text, View, StyleSheet, Image, TextInput, TouchableOpacity, Dimensions, FlatList, Switch, ImageBackground } from 'react-native';
+import { Slider, Text, View, StyleSheet, Image, TextInput, TouchableOpacity, Dimensions, FlatList, Switch, ImageBackground } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -101,6 +101,9 @@ var DListhistory = [];
 var nameOfRoom = '', DListNameRoom = [];
 //var DSystemHistory = [], listSystemHistory = [];
 
+var listAllSensorHistory = [];
+var listAllSensorHistoryData = [];
+var serialDate = 0;
 
 // function data() {
 
@@ -135,7 +138,6 @@ function ReadUserData(id) {
     // console.log("==========This is history of user in room ===============")
 
   });
-
 
   firebase.database().ref('listRooms/').on('value', function (snap) {
 
@@ -205,6 +207,7 @@ function ReadUserData(id) {
 
   //   });
   // }
+
 }
 
 
@@ -351,13 +354,13 @@ function RoomScreen({ route, navigation }) {
   const [valuesSensor, setValuesSensor] = useState('');
   /*MUST CREATE A FUNCTION TO CALL SET FUNCTION OF USE STATE WITH IF STATEMENT
   TO READ CHANGED DATA ON FIREBASE*/
-  const handleGetValue = (value) =>{
-    if(value != valuesSensor){
+  const handleGetValue = (value) => {
+    if (value != valuesSensor) {
       setValuesSensor(value);
     }
   }
   //var valuesSensor = ''; 
-  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3]).on('value', function (snapshot) { 
+  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3]).on('value', function (snapshot) {
     handleGetValue(snapshot.val().values);
     //console.log(valuesSensor);
   });
@@ -503,10 +506,10 @@ function RoomScreen({ route, navigation }) {
           onValueChange={toggleSwitch}
           value={isEnabled}
         /> */}
-        <Text style={{fontSize: 18, fontFamily: 'google-bold', color: '#404040'}}>
+        <Text style={{ fontSize: 18, fontFamily: 'google-bold', color: '#404040' }}>
           {DBulbs[serialRoom][3]}
         </Text>
-        <Text style={{fontSize: 30, color: '#404040' }}>
+        <Text style={{ fontSize: 30, color: '#404040' }}>
           {valuesSensor}
         </Text>
       </View>
@@ -549,7 +552,7 @@ function RoomScreen({ route, navigation }) {
           renderItem={({ item }) => (
             <View >
               <Slider
-                style={{ width: 250, height: 30, alignSelf:'center' }}
+                style={{ width: 250, height: 30, alignSelf: 'center' }}
                 maximumValue={255}
                 minimumValue={0}
                 minimumTrackTintColor="#FFE671"
@@ -570,7 +573,7 @@ function RoomScreen({ route, navigation }) {
                   else {
                     valueF = "0"
                   }
-                  bulbsRef.update({status: valueF > 0 ? true : false  ,valueF: valueF, valueS: item.valueS }).then().catch();
+                  bulbsRef.update({ status: valueF > 0 ? true : false, valueF: valueF, valueS: item.valueS }).then().catch();
                   item.valueF = valueF;
                   item.status = valueF > 0 ? true : false;
                   setTogglebulb(loadpage);
@@ -1103,25 +1106,69 @@ const CustomListview = ({ itemList }) => (
   </View>
 );
 
+function isEmptyObject(obj) {
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key))
+      return false;
+  }
+  return true;
+}
+
 function History() {
   const [serialRoom, setSerialRoom] = useState(0);
+  // const [serialDate, setSerialDate] = useState(0);
   const [sensorHistory, setSensorHistory] = useState({});
-  
-  const handleGetValue = (value) =>{
-    if( !(JSON.stringify(value) === JSON.stringify(sensorHistory))){
+  const [allSensorHistory, setAllSensorHistory] = useState({});
+  //const [listAllSensorHistory, setListAllSensorHistory] = useState([]);
+  const [toggle, setToggle] = useState(false);
+  var arrayTime = [], arrayLevelLight = [];
+
+  const handleSensorHistory = (value) => {
+    if (!(JSON.stringify(value) === JSON.stringify(allSensorHistory))) {
+      setAllSensorHistory(value);
+      //setListAllSensorHistory(Object.entries(value).map(item => item[0]));
+      listAllSensorHistory = Object.entries(value).map(item => item[0]);
+      listAllSensorHistoryData = Object.entries(value).map(item => item[1]);
+
+      //setSerialDate(Object.entries(value).map(item => item[0]).length-1);
+      serialDate = Object.entries(value).map(item => item[0]).length - 1;
+    }
+  }
+  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory').on('value', function (snapshot) {
+    handleSensorHistory(snapshot.val() != undefined ? snapshot.val() : {});
+  });
+  //console.log(allSensorHistory);
+  console.log(listAllSensorHistoryData);
+
+
+  const handleGetValue = (value) => {
+    //console.log(!(JSON.stringify(value) === JSON.stringify(sensorHistory)));
+    if (!(JSON.stringify(value) === JSON.stringify(sensorHistory))) {
+      //console.log(value);
       setSensorHistory(value);
     }
   }
   var time = new Date();
   var currentDate = time.toISOString().split('T')[0];
   //var valuesSensor = ''; 
-  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] +"/sensorHistory/" + currentDate).on('value', function (snapshot) { 
-    console.log(snapshot.val());
-    handleGetValue(snapshot.val());
+  firebase.database().ref(listAllSensorHistory.length != 0 ? ('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory/' + listAllSensorHistory[serialDate]) : ('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory/' + currentDate)).on('value', function (snapshot) {
+    //console.log(snapshot.val());
+    handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
   });
+  //console.log(sensorHistory)
   arrayTime = Object.entries(sensorHistory).map(item => item[0]);
   arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
-  console.log(Object.entries(sensorHistory).map(item => item[1]) );
+  if (arrayTime.length == 1) {
+    arrayTime.unshift("0");
+  }
+  if (arrayLevelLight.length == 1) {
+    arrayLevelLight.unshift("0");
+  }
+
+  //console.log(Object.entries(sensorHistory).map(item => item[1]) );
+
+  // console.log(arrayTime);
+  // console.log(arrayLevelLight);
   data = {
     labels: arrayTime,
     datasets: [
@@ -1131,11 +1178,61 @@ function History() {
     ]
   };
 
+  const changeDateLeft = () => {
+    console.log(listAllSensorHistory[serialDate - 1]);
+    if (serialDate > 0) {
+      serialDate -= 1;
+      var temp = listAllSensorHistoryData[serialDate];
+      arrayTime = Object.entries(temp).map(item => item[0]);
+      arrayLevelLight = Object.entries(temp).map(item => item[1]);
+      data = {
+        labels: arrayTime,
+        datasets: [
+          {
+            data: arrayLevelLight
+          }
+        ]
+      };
+      setToggle(!toggle);
+      //setSerialDate(setSerialDate - 1);
+    }
+    console.log("------------");
+    console.log(arrayTime);
+    console.log(arrayLevelLight);
+    console.log(serialDate);
+    console.log(listAllSensorHistory);
+  };
+
+  const changeDateRight = () => {
+    console.log(listAllSensorHistory[serialDate + 1]);
+    if (serialDate < (listAllSensorHistory.length - 1)) {
+      serialDate += 1;
+      var temp = listAllSensorHistoryData[serialDate];
+      arrayTime = Object.entries(temp).map(item => item[0]);
+      arrayLevelLight = Object.entries(temp).map(item => item[1]);
+      data = {
+        labels: arrayTime,
+        datasets: [
+          {
+            data: arrayLevelLight
+          }
+        ]
+      };
+      setToggle(!toggle);
+      //setSerialDate(setSerialDate + 1);
+      console.log("++++++++++++");
+      console.log(arrayTime);
+      console.log(arrayLevelLight);
+      console.log(serialDate);
+      console.log(listAllSensorHistory);
+    }
+  };
+
+
   const [nameRoom, setNameRoom] = useState(DListRoomOfUser.length != 0 ? DBulbs[0][1] : '');
   const changeRoomLeft = () => {
     if (serialRoom > 0) {
       setNameRoom(DListRoomOfUser.length != 0 ? DBulbs[serialRoom - 1][1] : '');
-      setSerialRoom(serialRoom - 1);
       nameOfRoom = DListRoomOfUser.length != 0 ? DBulbs[serialRoom - 1][1] : '';
       // DListhistory = DListRoomOfUser.length != 0 ? Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
       //   DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
@@ -1153,23 +1250,29 @@ function History() {
       // arrayTime.length = 0;
       // arrayLevelLight.length = 0;
       if (DListRoomOfUser.length != 0) {
-        var arrayTime = [], arrayLevelLight = [];
         var time = new Date();
         var currentDate = time.toISOString().split('T')[0];
         //var valuesSensor = ''; 
-        firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] +"/sensorHistory/" + currentDate).on('value', function (snapshot) { 
+        firebase.database().ref('listSensors/' + DBulbs[serialRoom-1][3] + "/sensorHistory/" + currentDate).on('value', function (snapshot) {
           console.log(snapshot.val());
-          handleGetValue(snapshot.val());
+          handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
         });
         arrayTime = Object.entries(sensorHistory).map(item => item[0]);
         arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
+        if (arrayTime.length == 1) {
+          arrayTime.unshift("0");
+        }
+        if (arrayLevelLight.length == 1) {
+          arrayLevelLight.unshift("0");
+        }
+
         // for (var sys of listSystemHistory) {
         //   arrayTime.push(sys.dateTime);
         // }
         // for (var sys of listSystemHistory) {
         //   arrayLevelLight.push(sys.levelLight);
         // }
-        console.log(arrayTime);
+        //console.log(arrayTime);
         data = {
           labels: arrayTime,
           datasets: [
@@ -1178,13 +1281,13 @@ function History() {
             }
           ]
         };
+        setSerialRoom(serialRoom - 1);
       }
     }
   };
   const changeRoomRight = () => {
     if (serialRoom < (DBulbs.length - 1)) {
       setNameRoom(DListRoomOfUser.length != 0 ? DBulbs[serialRoom + 1][1] : '');
-      setSerialRoom(serialRoom + 1);
       nameOfRoom = DListRoomOfUser.length != 0 ? DBulbs[serialRoom + 1][1] : '';
       // DListhistory = DListRoomOfUser.length != 0 ? Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
       //   DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
@@ -1202,23 +1305,32 @@ function History() {
       // arrayTime.length = 0;
       // arrayLevelLight.length = 0;
       if (DListRoomOfUser.length != 0) {
-        var arrayTime = [], arrayLevelLight = [];
         var time = new Date();
         var currentDate = time.toISOString().split('T')[0];
         //var valuesSensor = ''; 
-        firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] +"/sensorHistory/" + currentDate).on('value', function (snapshot) { 
-          console.log(snapshot.val());
-          handleGetValue(snapshot.val());
+        //console.log(currentDate);
+        firebase.database().ref('listSensors/' + DBulbs[serialRoom+1][3] + "/sensorHistory/" + currentDate).on('value', function (snapshot) {
+          //console.log(snapshot.val());
+          handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
         });
+        //console.log(sensorHistory);
         arrayTime = Object.entries(sensorHistory).map(item => item[0]);
         arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
+        if (arrayTime.length == 1) {
+          arrayTime.unshift("0");
+        }
+        if (arrayLevelLight.length == 1) {
+          arrayLevelLight.unshift("0");
+        }
+
         // for (var sys of listSystemHistory) {
         //   arrayTime.push(sys.dateTime);
         // }
         // for (var sys of listSystemHistory) {
         //   arrayLevelLight.push(sys.levelLight);
         // }
-        console.log(arrayTime);
+        // console.log(arrayTime);
+        // console.log(arrayLevelLight);
         data = {
           labels: arrayTime,
           datasets: [
@@ -1227,6 +1339,7 @@ function History() {
             }
           ]
         };
+        setSerialRoom(serialRoom + 1);
       }
       // for(var sys of arrayLevelLight){
       //   console.log(sys);
@@ -1234,8 +1347,10 @@ function History() {
       //console.log(data);
     }
   };
-
-  return DListRoomOfUser.length != 0 ? (
+  //console.log(!isEmptyObject(sensorHistory) && Object.keys(sensorHistory).length > 1 );
+  console.log(!isEmptyObject(sensorHistory));
+  console.log(arrayLevelLight.length > 1);
+  return (!isEmptyObject(sensorHistory) && arrayLevelLight.length > 1) ? (
     <View style={styles.container}>
 
       <View style={styles.header1}>
@@ -1314,13 +1429,48 @@ function History() {
       <Text style={styles.titleName}>statistics</Text>
       <LineChart
         style={styleBarChart}
-        data={data}
+        data={toggle ? data : data}
         width={screenWidth * 0.9}
         height={160}
+        withVerticalLabels={false}
         //yAxisSuffix="%"
         chartConfig={chartConfig}
         bezier
       />
+
+      <View style={{
+        marginTop: 8,
+        marginStart: -15,
+        marginBottom: 0,
+        width: 400,
+        height: 25,
+        alignItems: 'center',
+        // justifyContent: 'center',
+        marginStart: 50,
+        flexDirection: 'row',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+      }}>
+        <TouchableOpacity
+          onPress={changeDateLeft}
+          style={styles.btnleftright}
+        >
+          <MaterialCommunityIcons name="arrow-left-drop-circle" color={'#808080'} size={20} />
+        </TouchableOpacity>
+        <Text
+          style={{ fontSize: 14, fontFamily: 'google-bold', color: '#404040' }}
+
+        > {listAllSensorHistory[serialDate]} </Text>
+        <TouchableOpacity
+          onPress={changeDateRight}
+          style={styles.btnleftright}
+        >
+          <MaterialCommunityIcons name="arrow-right-drop-circle" color={'#808080'} size={20} />
+        </TouchableOpacity>
+      </View>
+
+
+
       <Text style={styles.titleName}>tasks</Text>
       <Text style={{ fontSize: 10 }}></Text>
 
@@ -1458,6 +1608,7 @@ function History() {
         style={{ width: '70%' }}
       />
 
+      <Text style={styles.titleName}>statistics</Text>
       <View
         style={styles.titleR}
       >
@@ -1465,8 +1616,102 @@ function History() {
           <Text
             style={{ fontSize: 14, fontFamily: 'google-bold', color: '#808080' }}
           >Could not find history</Text>
+          <Text style={{ fontSize: 103, }}></Text>
         </View>
       </View>
+
+      <View style={{
+        marginTop: 8,
+        marginStart: -15,
+        marginBottom: 0,
+        width: 400,
+        height: 25,
+        alignItems: 'center',
+        // justifyContent: 'center',
+        marginStart: 50,
+        flexDirection: 'row',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+      }}>
+        <TouchableOpacity
+          onPress={changeDateLeft}
+          style={styles.btnleftright}
+        >
+          <MaterialCommunityIcons name="arrow-left-drop-circle" color={'#808080'} size={20} />
+        </TouchableOpacity>
+        <Text
+          style={{ fontSize: 14, fontFamily: 'google-bold', color: '#404040' }}
+
+        > {listAllSensorHistory[serialDate]} </Text>
+        <TouchableOpacity
+          onPress={changeDateRight}
+          style={styles.btnleftright}
+        >
+          <MaterialCommunityIcons name="arrow-right-drop-circle" color={'#808080'} size={20} />
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.titleName}>tasks</Text>
+      <Text style={{ fontSize: 10 }}></Text>
+
+      <View style={{
+        height: 110
+      }}>
+        <CustomListview style={styles.customList}
+          itemList={DListhistory}
+        />
+      </View>
+      {/* <View style={styles.changeHistory}>
+        <TouchableOpacity
+          onPress={changeRoomLeft}
+          style={styles.btnleftright}
+        >
+          <MaterialCommunityIcons name="arrow-left-drop-circle" color={'gray'} size={30} />
+        </TouchableOpacity>
+        <Text
+          style={{ fontSize: 25, fontFamily: 'google-bold' }}
+
+        > {nameRoom} </Text>
+        <TouchableOpacity
+          onPress={changeRoomRight}
+          style={styles.btnleftright}
+        >
+          <MaterialCommunityIcons name="arrow-right-drop-circle" color={'gray'} size={30} />
+        </TouchableOpacity>
+      </View> */}
+
+      <View style={{
+        marginTop: 8,
+        marginStart: -15,
+        marginBottom: 0,
+        width: 400,
+        height: 65,
+        alignItems: 'center',
+        // justifyContent: 'center',
+        marginStart: 50,
+        flexDirection: 'row',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 10,
+      }}>
+        <TouchableOpacity
+          onPress={changeRoomLeft}
+          style={styles.btnleftright}
+        >
+          <MaterialCommunityIcons name="arrow-left-drop-circle" color={'#808080'} size={30} />
+        </TouchableOpacity>
+        <Text
+          style={{ fontSize: 25, fontFamily: 'google-bold', color: '#404040' }}
+
+        > {nameRoom} </Text>
+        <TouchableOpacity
+          onPress={changeRoomRight}
+          style={styles.btnleftright}
+        >
+          <MaterialCommunityIcons name="arrow-right-drop-circle" color={'#808080'} size={30} />
+        </TouchableOpacity>
+      </View>
+
+
     </View>);
 }
 
@@ -1866,7 +2111,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingStart: 10,
     alignItems: 'center',
-    
+
   },
   boxOne1: {
     flex: 1,
@@ -1881,7 +2126,7 @@ const styles = StyleSheet.create({
     // alignContent: 'center',
     //alignItems: 'center',
     alignSelf: 'center',
-    
+
   },
   // boxOne: {
   //   flex: 1,

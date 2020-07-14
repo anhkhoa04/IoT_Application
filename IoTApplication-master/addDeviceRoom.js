@@ -67,12 +67,12 @@ export default function AddDeviceRoom({ navigation }) {
         firebase.database().ref('/listSensors/'+ idParam).set({
             device_id: idParam,
             values: "0",
-            sensorHistory: {
-                [currentDate]: {
-                    [currentTime]: "1",
-                    [time.getHours()+":"+time.getMinutes()+":"+(time.getSeconds()+1)]: "0",
-                }
-            }
+            // sensorHistory: {
+            //     [currentDate]: {
+            //         [currentTime]: "1",
+            //         [time.getHours()+":"+time.getMinutes()+":"+(time.getSeconds()+1)]: "0",
+            //     }
+            // }
         })
     }
     
