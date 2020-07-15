@@ -18,6 +18,8 @@ export default function ManageAccount({ navigation }) {
     const [rooms, setRooms] = useState([]);
     const [bulbs, setBulbs] = useState([]);
     const [roomChoose, setRoomChoose] = useState('');
+    const [roomIdChoose, setRoomIdChoose] = useState('');
+    const [intensity, setIntensity] = useState('');   
     const [bulbVisible, setBulbVisible] = useState(false);
     const [firstPush, setFirstPush] = useState(true);
 
@@ -34,6 +36,12 @@ export default function ManageAccount({ navigation }) {
         dataTmp.push({});
         return dataTmp;
     };
+
+    const updateIntensity = (roomIdParam, value) =>{
+        firebase.database().ref('/listRooms/'+roomIdParam).update({
+            levelLight: value === '' ? '0' : value,
+        });
+    }
 
     if (fontLoaded) {
 
@@ -130,6 +138,8 @@ export default function ManageAccount({ navigation }) {
                                         if (item.roomsName != null) {
                                             setBulbs(Object.values(item.listBulbs));
                                             setRoomChoose(item.roomsName);
+                                            setRoomIdChoose(item.roomsID);
+                                            setIntensity(item.levelLight);
                                         } else {
                                             setBulbVisible(false);
                                             setBulbs([]);
@@ -163,7 +173,6 @@ export default function ManageAccount({ navigation }) {
                         )}
                     />
                 </View>
-
 
                 <View style={styles.boxTwo}>
                     <Text
@@ -215,7 +224,33 @@ export default function ManageAccount({ navigation }) {
                         )}
                     />
                 </View>
-
+                
+                <View style={styles.boxTwo}>
+                    <Text
+                        style={{
+                            fontFamily: 'google-bold',
+                            fontSize: 20,
+                            color: '#404040'
+                        }}
+                    >Intensity</Text>
+                    <TextInput
+                        keyboardType={'decimal-pad'}
+                        placeholder={'Bulb name'}
+                        defaultValue={intensity}
+                        onChangeText={(val) => updateIntensity(roomIdChoose, val)}
+                        style={{
+                            fontFamily: 'google-bold',
+                            fontSize: 20,
+                            width: 300,
+                            height: 45,
+                            backgroundColor: '#e7e6e6',
+                            borderRadius: 12,
+                            color: '#404040',
+                            textAlign: 'center',
+                            //margin: 10
+                        }}
+                    />
+                </View>
 
                 <View style={styles.boxTwo}>
                 </View>
@@ -280,7 +315,7 @@ const styles = StyleSheet.create({
     boxOne: {
         // flex: 1,
         width: 320,
-        height: 150,
+        height: 130,
         backgroundColor: '#f5f5f5',
         // paddingTop: 30,
 
@@ -288,7 +323,7 @@ const styles = StyleSheet.create({
     boxTwo: {
         padding: 20,
         width: '100%',
-        height: 20,
+        height: 50,
         alignItems: 'center',
         justifyContent: 'center',
     },

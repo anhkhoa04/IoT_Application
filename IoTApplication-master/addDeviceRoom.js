@@ -20,6 +20,7 @@ export default function AddDeviceRoom({ navigation }) {
     const [bulbsName, setBulbsName] = useState('');
     const [roomName, setRoomName] = useState('');
     const [sensorID, setSensorID] = useState('');
+    const [intensity, setIntensity] = useState('');
     const [listSensors, setListSensors] = useState([]);
 
     useEffect(() => {
@@ -37,10 +38,10 @@ export default function AddDeviceRoom({ navigation }) {
 
     const [resBulb, setResBulb] = useState([]);
 
-    const addRoomData = (roomNameParam, sensorIDParam, id) => {
+    const addRoomData = (roomNameParam, sensorIDParam, id, levelParam) => {
         // let id = uuid.v4();
         firebase.database().ref('/listRooms/' + id).set({
-            levelLight: '5',
+            levelLight: levelParam,
             lightSensorID: sensorIDParam,
             roomsID: id,
             roomsName: roomNameParam
@@ -110,9 +111,15 @@ export default function AddDeviceRoom({ navigation }) {
                     />
                     <TextInput
                         keyboardType={'decimal-pad'}
-                        placeholder={'Sensor ID'}
+                        placeholder={'Sensor id'}
                         style={styles.textInput}
                         onChangeText={(val) => setSensorID(val)}
+                    />
+                    <TextInput
+                        keyboardType={'decimal-pad'}
+                        placeholder={'Intensity'}
+                        style={styles.textInput}
+                        onChangeText={(val) => setIntensity(val)}
                     />
                 </View>
 
@@ -221,11 +228,11 @@ export default function AddDeviceRoom({ navigation }) {
                 <View style={styles.boxThree}>
                     <TouchableOpacity
                         onPress={() => {
-                            if (roomName == '' || sensorID == '') Alert.alert('OOPS', 'Enter your room name and sensor id');
+                            if (roomName.trim() == '' || sensorID.trim() == '' || intensity.trim() == '') Alert.alert('OOPS', 'Enter your room name, sensor id and intensity');
                             else if(listSensors.includes(sensorID) ) Alert.alert('OOPS', 'Sensor id has been existed');
                             else {
                                 let id = uuid.v4();
-                                addRoomData(roomName, sensorID, id);
+                                addRoomData(roomName, sensorID, id, intensity);
                                 addSensorData(sensorID);
                                 resBulb.map(item => addBulbData(item, id));
                                 navigation.navigate('ManageDevice')
@@ -296,8 +303,8 @@ const styles = StyleSheet.create({
     },
     textInput: {
         fontFamily: 'google-bold',
-        fontSize: 20,
-        width: 140,
+        fontSize: 14,
+        width: 85,
         height: 45,
         backgroundColor: '#e7e6e6',
         borderRadius: 15,

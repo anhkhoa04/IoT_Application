@@ -149,7 +149,7 @@ function ReadUserData(id) {
       DBulbs = roomDataOfUser.map((item) => {
         for (var name of DListNameRoom) {
           if (item[1].roomsName == name) {
-            return [item[1].roomsID, item[1].roomsName, item[1].listBulbs, item[1].lightSensorID];
+            return [item[1].roomsID, item[1].roomsName, item[1].listBulbs, item[1].lightSensorID, item[1].levelLight];
           }
         }
         return null;
@@ -354,8 +354,30 @@ function RoomScreen({ route, navigation }) {
   const [valuesSensor, setValuesSensor] = useState('');
   /*MUST CREATE A FUNCTION TO CALL SET FUNCTION OF USE STATE WITH IF STATEMENT
   TO READ CHANGED DATA ON FIREBASE*/
+  let count = 0;
   const handleGetValue = (value) => {
-    if (value != valuesSensor) {
+    if (value != valuesSensor && count == 0) {
+      if(value > parseInt(DBulbs[serialRoom][4])+10){
+        let factor = parseFloat(value)/(parseFloat(DBulbs[serialRoom][4])+10);
+        for(var i =0; i< bulb.length; i++){
+          bulb[i].valueS = parseInt(bulb[i].valueS/factor).toString();
+          firebase.database().ref('listRooms/' + DBulbs[serialRoom][0] + '/listBulbs/' + bulb[i].bulbsID).update({
+            valueS: (parseInt(bulb[i].valueS)).toString()
+          });
+        }
+      }
+      else if(value < parseInt(DBulbs[serialRoom][4])-10){
+        var factor = (parseFloat(DBulbs[serialRoom][4])-10)/parseFloat(value);
+        console.log(factor);
+        for(var i =0; i< bulb.length; i++){
+          bulb[i].valueS = parseInt(bulb[i].valueS*factor).toString();
+          console.log(bulb[i].valueS);
+          firebase.database().ref('listRooms/' + DBulbs[serialRoom][0] + '/listBulbs/' + bulb[i].bulbsID).update({
+            valueS: (parseInt(bulb[i].valueS)).toString()
+          });
+        }
+      }
+      count++;
       setValuesSensor(value);
     }
   }
@@ -371,7 +393,7 @@ function RoomScreen({ route, navigation }) {
 
   const changeRoomLeft = () => {
     if (serialRoom > 0) {
-
+      count++;
       let bulbRootTmp1 = DListRoomOfUser.find(item => {
         if (item[1].roomsName == DBulbs[serialRoom - 1][1]) return item[0];
       });
@@ -386,7 +408,7 @@ function RoomScreen({ route, navigation }) {
   };
   const changeRoomRight = () => {
     if (serialRoom < (DBulbs.length - 1)) {
-
+      count++;
       let bulbRootTmp1 = DListRoomOfUser.find(item => {
         if (item[1].roomsName == DBulbs[serialRoom + 1][1]) return item[0];
       });
@@ -509,7 +531,7 @@ function RoomScreen({ route, navigation }) {
         <Text style={{ fontSize: 18, fontFamily: 'google-bold', color: '#404040' }}>
           {DBulbs[serialRoom][3]}
         </Text>
-        <Text style={{ fontSize: 30, color: '#404040' }}>
+        <Text style={{ fontSize: 30, color: '#404040', fontFamily: 'google-bold' }}>
           {valuesSensor}
         </Text>
       </View>
@@ -543,7 +565,7 @@ function RoomScreen({ route, navigation }) {
 
       <View style={styles.boxOne}>
         <FlatGrid
-          itemDimension={200}
+          itemDimension={250}
           data={bulb}
           style={styles.gridFlat}
           // staticDimension={300}
@@ -629,6 +651,21 @@ function RoomScreen({ route, navigation }) {
                         status: 'off'
                       })
                     }
+
+                    item = {
+                      device_key: item.bulbsID,
+                      device_id: item.bulbsName,
+                      values: [item.status ?  "1" : "0", item.valueS]
+                    }
+                    var data = JSON.stringify(item);
+                    const axios = require('axios');
+                    axios.post('http://192.168.1.17:8080/api', { data })
+                      .then(function (response) {
+                        //console.log(response);
+                      })
+                      .catch(function (error) {
+                        //console.log(error);
+                      });
 
                     setTogglebulb(loadpage);
                   }
@@ -1147,8 +1184,8 @@ function History() {
     handleSensorHistory(snapshot.val() != undefined ? snapshot.val() : {});
   });
   //console.log(allSensorHistory);
-  console.log(listAllSensorHistory);
-  console.log(serialDate+"-----");
+  // console.log(listAllSensorHistory);
+  // console.log(serialDate+"-----");
 
   const handleGetValue = (value) => {
     //console.log(!(JSON.stringify(value) === JSON.stringify(sensorHistory)));
@@ -1166,10 +1203,10 @@ function History() {
   //console.log(sensorHistory)
   arrayTime = Object.entries(sensorHistory).map(item => item[0]);
   arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
-  if (arrayTime.length == 1) {
+  if (arrayTime.length >= 1) {
     arrayTime.unshift("0");
   }
-  if (arrayLevelLight.length == 1) {
+  if (arrayLevelLight.length >= 1) {
     arrayLevelLight.unshift("0");
   }
 
@@ -1187,7 +1224,7 @@ function History() {
   };
 
   const changeDateLeft = () => {
-    console.log(listAllSensorHistory[serialDate - 1]);
+    //console.log(listAllSensorHistory[serialDate - 1]);
     if (serialDate > 0) {
       serialDate -= 1;
       var temp = listAllSensorHistoryData[serialDate];
@@ -1204,15 +1241,15 @@ function History() {
       setToggle(!toggle);
       //setSerialDate(setSerialDate - 1);
     }
-    console.log("------------");
-    console.log(arrayTime);
-    console.log(arrayLevelLight);
-    console.log(serialDate);
-    console.log(listAllSensorHistory);
+    // console.log("------------");
+    // console.log(arrayTime);
+    // console.log(arrayLevelLight);
+    // console.log(serialDate);
+    // console.log(listAllSensorHistory);
   };
 
   const changeDateRight = () => {
-    console.log(listAllSensorHistory[serialDate + 1]);
+    //console.log(listAllSensorHistory[serialDate + 1]);
     if (serialDate < (listAllSensorHistory.length - 1)) {
       serialDate += 1;
       var temp = listAllSensorHistoryData[serialDate];
@@ -1228,11 +1265,11 @@ function History() {
       };
       setToggle(!toggle);
       //setSerialDate(setSerialDate + 1);
-      console.log("++++++++++++");
-      console.log(arrayTime);
-      console.log(arrayLevelLight);
-      console.log(serialDate);
-      console.log(listAllSensorHistory);
+      // console.log("++++++++++++");
+      // console.log(arrayTime);
+      // console.log(arrayLevelLight);
+      // console.log(serialDate);
+      // console.log(listAllSensorHistory);
     }
   };
 
@@ -1262,15 +1299,15 @@ function History() {
         var currentDate = time.toISOString().split('T')[0];
         //var valuesSensor = ''; 
         firebase.database().ref('listSensors/' + DBulbs[serialRoom-1][3] + "/sensorHistory/" + currentDate).on('value', function (snapshot) {
-          console.log(snapshot.val());
+          //console.log(snapshot.val());
           handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
         });
         arrayTime = Object.entries(sensorHistory).map(item => item[0]);
         arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
-        if (arrayTime.length == 1) {
+        if (arrayTime.length >= 1) {
           arrayTime.unshift("0");
         }
-        if (arrayLevelLight.length == 1) {
+        if (arrayLevelLight.length >= 1) {
           arrayLevelLight.unshift("0");
         }
 
@@ -1324,10 +1361,10 @@ function History() {
         //console.log(sensorHistory);
         arrayTime = Object.entries(sensorHistory).map(item => item[0]);
         arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
-        if (arrayTime.length == 1) {
+        if (arrayTime.length >= 1) {
           arrayTime.unshift("0");
         }
-        if (arrayLevelLight.length == 1) {
+        if (arrayLevelLight.length >= 1) {
           arrayLevelLight.unshift("0");
         }
 
@@ -1356,8 +1393,8 @@ function History() {
     }
   };
   //console.log(!isEmptyObject(sensorHistory) && Object.keys(sensorHistory).length > 1 );
-  console.log(!isEmptyObject(sensorHistory));
-  console.log(arrayLevelLight.length > 1);
+  //console.log(!isEmptyObject(sensorHistory));
+  //console.log(arrayLevelLight.length > 1);
   return (!isEmptyObject(sensorHistory) && arrayLevelLight.length > 1) ? (
     <View style={styles.container}>
 
@@ -1428,11 +1465,11 @@ function History() {
         </TouchableOpacity>
       </View>
 
-      <Image
+      {/* <Image
         source={require('./assets/manageHistory.png')}
         resizeMode='contain'
         style={{ width: '70%' }}
-      />
+      /> */}
 
       <Text style={styles.titleName}>statistics</Text>
       <LineChart
@@ -1483,7 +1520,7 @@ function History() {
       <Text style={{ fontSize: 10 }}></Text>
 
       <View style={{
-        height: 110
+        height: 124
       }}>
         <CustomListview style={styles.customList}
           itemList={DListhistory}
@@ -1610,11 +1647,11 @@ function History() {
         </TouchableOpacity>
       </View>
 
-      <Image
+      {/* <Image
         source={require('./assets/manageHistory.png')}
         resizeMode='contain'
         style={{ width: '70%' }}
-      />
+      /> */}
 
       <Text style={styles.titleName}>statistics</Text>
       <View
@@ -1624,7 +1661,7 @@ function History() {
           <Text
             style={{ fontSize: 14, fontFamily: 'google-bold', color: '#808080' }}
           >Could not find history</Text>
-          <Text style={{ fontSize: 103, }}></Text>
+          <Text style={{ fontSize: 104, }}></Text>
         </View>
       </View>
 
@@ -1663,7 +1700,7 @@ function History() {
       <Text style={{ fontSize: 10 }}></Text>
 
       <View style={{
-        height: 110
+        height: 124
       }}>
         <CustomListview style={styles.customList}
           itemList={DListhistory}
@@ -2002,7 +2039,6 @@ const styles = StyleSheet.create({
     height: '40%',
     alignItems: 'flex-end',
     justifyContent: 'center',
-    backgroundColor: 'red'
   },
   room: {
     fontFamily: 'google-bold',
@@ -2068,12 +2104,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     width: 60,
     height: 60,
-    marginVertical: '3%',
-    marginHorizontal: '2%',
+    marginVertical: 0,
+    marginHorizontal: 0,
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    alignSelf: 'center'
+    alignSelf: 'center',
+    // paddingLeft: -10
   },
   ItemDevicesList: {
     flex: 1,
@@ -2113,11 +2150,11 @@ const styles = StyleSheet.create({
   },
   boxOne: {
     // flex: 1,
-    width: 320,
+    width: '100%',
     height: 190,
     backgroundColor: '#f5f5f5',
-    paddingTop: 20,
-    paddingStart: 10,
+    // paddingTop: 20,
+    // paddingStart: 10,
     alignItems: 'center',
 
   },
