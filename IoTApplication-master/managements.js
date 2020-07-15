@@ -1122,6 +1122,8 @@ function History() {
   //const [listAllSensorHistory, setListAllSensorHistory] = useState([]);
   const [toggle, setToggle] = useState(false);
   var arrayTime = [], arrayLevelLight = [];
+  var time = new Date();
+  var currentDate = time.toISOString().split('T')[0];
 
   const handleSensorHistory = (value) => {
     if (!(JSON.stringify(value) === JSON.stringify(allSensorHistory))) {
@@ -1133,13 +1135,20 @@ function History() {
       //setSerialDate(Object.entries(value).map(item => item[0]).length-1);
       serialDate = Object.entries(value).map(item => item[0]).length - 1;
     }
+    if(!listAllSensorHistory.includes(currentDate) && listAllSensorHistory.length > 0 ){
+      listAllSensorHistory.push(currentDate);
+      serialDate += 1;
+    }
+    else if (!listAllSensorHistory.includes(currentDate) && listAllSensorHistory.length == 0){
+      listAllSensorHistory.push(currentDate);
+    }
   }
   firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory').on('value', function (snapshot) {
     handleSensorHistory(snapshot.val() != undefined ? snapshot.val() : {});
   });
   //console.log(allSensorHistory);
-  console.log(listAllSensorHistoryData);
-
+  console.log(listAllSensorHistory);
+  console.log(serialDate+"-----");
 
   const handleGetValue = (value) => {
     //console.log(!(JSON.stringify(value) === JSON.stringify(sensorHistory)));
@@ -1148,10 +1157,9 @@ function History() {
       setSensorHistory(value);
     }
   }
-  var time = new Date();
-  var currentDate = time.toISOString().split('T')[0];
+  
   //var valuesSensor = ''; 
-  firebase.database().ref(listAllSensorHistory.length != 0 ? ('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory/' + listAllSensorHistory[serialDate]) : ('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory/' + currentDate)).on('value', function (snapshot) {
+  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory/' + listAllSensorHistory[serialDate] ).on('value', function (snapshot) {
     //console.log(snapshot.val());
     handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
   });
@@ -1183,8 +1191,8 @@ function History() {
     if (serialDate > 0) {
       serialDate -= 1;
       var temp = listAllSensorHistoryData[serialDate];
-      arrayTime = Object.entries(temp).map(item => item[0]);
-      arrayLevelLight = Object.entries(temp).map(item => item[1]);
+      arrayTime = temp != null ? Object.entries(temp).map(item => item[0]) : [];
+      arrayLevelLight = temp != null ? Object.entries(temp).map(item => item[1]) : [];
       data = {
         labels: arrayTime,
         datasets: [
@@ -1208,8 +1216,8 @@ function History() {
     if (serialDate < (listAllSensorHistory.length - 1)) {
       serialDate += 1;
       var temp = listAllSensorHistoryData[serialDate];
-      arrayTime = Object.entries(temp).map(item => item[0]);
-      arrayLevelLight = Object.entries(temp).map(item => item[1]);
+      arrayTime = temp != null ? Object.entries(temp).map(item => item[0]) : [];
+      arrayLevelLight = temp != null ? Object.entries(temp).map(item => item[1]) : [];
       data = {
         labels: arrayTime,
         datasets: [
@@ -1455,17 +1463,17 @@ function History() {
           onPress={changeDateLeft}
           style={styles.btnleftright}
         >
-          <MaterialCommunityIcons name="arrow-left-drop-circle" color={'#808080'} size={20} />
+          <MaterialCommunityIcons name="arrow-left-drop-circle" color={'#808080'} size={25} />
         </TouchableOpacity>
         <Text
-          style={{ fontSize: 14, fontFamily: 'google-bold', color: '#404040' }}
+          style={{ fontSize: 16, fontFamily: 'google-bold', color: '#404040' }}
 
-        > {listAllSensorHistory[serialDate]} </Text>
+        > {listAllSensorHistory[serialDate] } </Text>
         <TouchableOpacity
           onPress={changeDateRight}
           style={styles.btnleftright}
         >
-          <MaterialCommunityIcons name="arrow-right-drop-circle" color={'#808080'} size={20} />
+          <MaterialCommunityIcons name="arrow-right-drop-circle" color={'#808080'} size={25} />
         </TouchableOpacity>
       </View>
 
@@ -1505,7 +1513,7 @@ function History() {
         marginStart: -15,
         marginBottom: 0,
         width: 400,
-        height: 65,
+        height: 55,
         alignItems: 'center',
         // justifyContent: 'center',
         marginStart: 50,
@@ -1637,17 +1645,17 @@ function History() {
           onPress={changeDateLeft}
           style={styles.btnleftright}
         >
-          <MaterialCommunityIcons name="arrow-left-drop-circle" color={'#808080'} size={20} />
+          <MaterialCommunityIcons name="arrow-left-drop-circle" color={'#808080'} size={25} />
         </TouchableOpacity>
         <Text
-          style={{ fontSize: 14, fontFamily: 'google-bold', color: '#404040' }}
+          style={{ fontSize: 16, fontFamily: 'google-bold', color: '#404040' }}
 
         > {listAllSensorHistory[serialDate]} </Text>
         <TouchableOpacity
           onPress={changeDateRight}
           style={styles.btnleftright}
         >
-          <MaterialCommunityIcons name="arrow-right-drop-circle" color={'#808080'} size={20} />
+          <MaterialCommunityIcons name="arrow-right-drop-circle" color={'#808080'} size={25} />
         </TouchableOpacity>
       </View>
 
@@ -1685,7 +1693,7 @@ function History() {
         marginStart: -15,
         marginBottom: 0,
         width: 400,
-        height: 65,
+        height: 55,
         alignItems: 'center',
         // justifyContent: 'center',
         marginStart: 50,
