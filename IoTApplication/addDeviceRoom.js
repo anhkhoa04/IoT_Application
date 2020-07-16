@@ -110,7 +110,7 @@ export default function AddDeviceRoom({ navigation }) {
                         onChangeText={(val) => setRoomName(val)}
                     />
                     <TextInput
-                        keyboardType={'decimal-pad'}
+                        keyboardType={'default'}
                         placeholder={'Sensor id'}
                         style={styles.textInput}
                         onChangeText={(val) => setSensorID(val)}
@@ -137,7 +137,7 @@ export default function AddDeviceRoom({ navigation }) {
 
                 <View style={styles.boxThree}>
                     <TextInput
-                        keyboardType={'decimal-pad'}
+                        keyboardType={'default'}
                         placeholder={'Bulb name'}
                         onChangeText={(val) => setBulbsName(val)}
                         value={bulbsName}

@@ -50,7 +50,7 @@ export default function ManageAccount({ navigation }) {
             <View style={styles.container}>
 
                 <View style={styles.header1}>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         onPress={() => setToogle(!toogle)}
                         style={{
                             width: 40,
@@ -82,7 +82,7 @@ export default function ManageAccount({ navigation }) {
                             resizeMode='contain'
                             style={{ width: '40%' }}
                         />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <TouchableOpacity
                         onPress={() => navigation.navigate('Home')}
@@ -176,10 +176,12 @@ export default function ManageAccount({ navigation }) {
 
                 <View style={styles.boxTwo}>
                     <Text
-                        style={{
+                        style={roomChoose!='' ?{
                             fontFamily: 'google-bold',
                             fontSize: 20,
                             color: '#404040'
+                        } : {
+                            fontSize: 0
                         }}
                     >Devices</Text>
                 </View>
@@ -224,21 +226,27 @@ export default function ManageAccount({ navigation }) {
                         )}
                     />
                 </View>
-                
+
                 <View style={styles.boxTwo}>
                     <Text
-                        style={{
+                        style={roomChoose!='' ?{
                             fontFamily: 'google-bold',
                             fontSize: 20,
                             color: '#404040'
+                        } : {
+                            fontSize: 0
                         }}
                     >Intensity</Text>
+                </View>
+                
+                <View style={ styles.boxThree}>
+                    
                     <TextInput
                         keyboardType={'decimal-pad'}
                         placeholder={'Bulb name'}
                         defaultValue={intensity}
                         onChangeText={(val) => updateIntensity(roomIdChoose, val)}
-                        style={{
+                        style={roomChoose!='' ? {
                             fontFamily: 'google-bold',
                             fontSize: 20,
                             width: 300,
@@ -248,12 +256,15 @@ export default function ManageAccount({ navigation }) {
                             color: '#404040',
                             textAlign: 'center',
                             //margin: 10
+                        } : {
+                            width: 0,
+                            height: 0,
                         }}
                     />
                 </View>
 
-                <View style={styles.boxTwo}>
-                </View>
+                {/* <View style={styles.boxTwo}>
+                </View> */}
 
                 <View style={styles.footer}>
 
@@ -304,7 +315,7 @@ const styles = StyleSheet.create({
         height: 60,
         backgroundColor: '#f5f5f5',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
     },
     container: {
         flex: 1,
@@ -315,7 +326,7 @@ const styles = StyleSheet.create({
     boxOne: {
         // flex: 1,
         width: 320,
-        height: 130,
+        height: 114,
         backgroundColor: '#f5f5f5',
         // paddingTop: 30,
 
@@ -323,9 +334,10 @@ const styles = StyleSheet.create({
     boxTwo: {
         padding: 20,
         width: '100%',
-        height: 50,
+        height: 20,
         alignItems: 'center',
         justifyContent: 'center',
+        // backgroundColor: 'red'
     },
     item: {
         flexDirection: 'row',
@@ -407,4 +419,12 @@ const styles = StyleSheet.create({
         height: 30,
         marginBottom: 30
     },
+    boxThree: {
+        flexDirection: 'row',
+        width: '100%',
+        height: 70,
+        alignItems: 'center',
+        marginLeft: 10
+    },
+    
 });

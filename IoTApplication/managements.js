@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Slider, Text, View, StyleSheet, Image, TextInput, TouchableOpacity, Dimensions, FlatList, Switch, ImageBackground } from 'react-native';
+import { Slider, Text, View, StyleSheet, Image, TextInput, TouchableOpacity, Dimensions, FlatList, Switch, ImageBackground, Alert } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -99,11 +99,12 @@ var DListRoomOfUser = [];
 var DListhistory = [];
 //var DListIdRoom = [];
 var nameOfRoom = '', DListNameRoom = [];
-//var DSystemHistory = [], listSystemHistory = [];
+var DSystemHistory = [], listSystemHistory = [];
 
 var listAllSensorHistory = [];
 var listAllSensorHistoryData = [];
 var serialDate = 0;
+var arrayLevelLight = [];
 
 // function data() {
 
@@ -346,7 +347,6 @@ function RoomScreen({ route, navigation }) {
   let loadpage = false;
   const [nameRoom, setNameRoom] = useState(DListRoomOfUser.length != 0 ? DBulbs[0][1] : '');
   const [isEnabled, setIsEnabled] = useState(false);
-  // const [acount, setAcount] = useState(false);
   const [bulb, setBulb] = useState(DListRoomOfUser.length != 0 ? Object.entries(DBulbs[0][2]).map(item => item[1]) : '');
   const [togglebulb, setTogglebulb] = useState(false);
   const toggleSwitch = () => setIsEnabled(previousState => !previousState);
@@ -357,35 +357,17 @@ function RoomScreen({ route, navigation }) {
   let count = 0;
   const handleGetValue = (value) => {
     if (value != valuesSensor && count == 0) {
-      if(value > parseInt(DBulbs[serialRoom][4])+10){
-        let factor = parseFloat(value)/(parseFloat(DBulbs[serialRoom][4])+10);
-        for(var i =0; i< bulb.length; i++){
-          bulb[i].valueS = parseInt(bulb[i].valueS/factor).toString();
-          firebase.database().ref('listRooms/' + DBulbs[serialRoom][0] + '/listBulbs/' + bulb[i].bulbsID).update({
-            valueS: (parseInt(bulb[i].valueS)).toString()
-          });
-        }
-      }
-      else if(value < parseInt(DBulbs[serialRoom][4])-10){
-        var factor = (parseFloat(DBulbs[serialRoom][4])-10)/parseFloat(value);
-        console.log(factor);
-        for(var i =0; i< bulb.length; i++){
-          bulb[i].valueS = parseInt(bulb[i].valueS*factor).toString();
-          console.log(bulb[i].valueS);
-          firebase.database().ref('listRooms/' + DBulbs[serialRoom][0] + '/listBulbs/' + bulb[i].bulbsID).update({
-            valueS: (parseInt(bulb[i].valueS)).toString()
-          });
-        }
-      }
-      count++;
       setValuesSensor(value);
     }
   }
   //var valuesSensor = ''; 
-  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3]).on('value', function (snapshot) {
-    handleGetValue(snapshot.val().values);
-    //console.log(valuesSensor);
-  });
+  if(DBulbs[serialRoom]!=undefined){
+    firebase.database().ref('listSensors/' + DBulbs[serialRoom][3]).on('value', function (snapshot) {
+      handleGetValue(snapshot.val().values);
+      //console.log(valuesSensor);
+    });
+  }
+  
   // let bulbRootTmp = DListRoomOfUser.find(item => {
   //   if (item[1].roomsName == DBulbs[0][1]) return item[0];
   // });
@@ -428,12 +410,13 @@ function RoomScreen({ route, navigation }) {
       navigation.navigate('Schedule', { item: DSchedules[serialRoom] });
     }
   }
+  
+
   return DListRoomOfUser.length != 0 ? (
     <View style={{ flex: 1, padding: 40, paddingLeft: '5%', backgroundColor: '#f5f5f5' }}>
 
       <View style={styles.header1}>
-        <TouchableOpacity
-          // onPress={() => console.log(bulb)}
+        {/* <TouchableOpacity
           style={{
             width: 40,
             height: 40,
@@ -464,7 +447,7 @@ function RoomScreen({ route, navigation }) {
             resizeMode='contain'
             style={{ width: '40%' }}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity
           onPress={() => {
@@ -508,60 +491,32 @@ function RoomScreen({ route, navigation }) {
         style={styles.titleR}
       >
         <View style={[styles.titleC, { alignItems: 'center' }]}>
-          <Text
-            style={{ fontSize: 22, fontFamily: 'google-bold', color: '#404040' }}
-          > </Text>
+          
         </View>
-        {/* <View style={[styles.titleC, { alignItems: 'center' }]}>
-          <Text
-            style={{ fontSize: 16, fontFamily: 'google-bold', color: '#808080' }}
-          >by handwork</Text>
-        </View> */}
       </View>
       <View
         style={{ marginTop: '2%', alignItems: 'center' }}
       >
-        {/* <Switch
-          trackColor={{ false: "#767577", true: "#81b0ff" }}
-          thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f5"}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleSwitch}
-          value={isEnabled}
-        /> */}
         <Text style={{ fontSize: 18, fontFamily: 'google-bold', color: '#404040' }}>
           {DBulbs[serialRoom][3]}
         </Text>
-        <Text style={{ fontSize: 30, color: '#404040', fontFamily: 'google-bold' }}>
-          {valuesSensor}
-        </Text>
-      </View>
-      {/* <View
-        style={styles.Viewdevice}
-      >
-        <FlatList
-          keyExtractor={item => item.idevice}
-          data={bulb}
-          style={[styles.ItemDevicesList]}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => {
-                if (isEnabled) {
-                  item.status = !(item.status);
-                  loadpage = !togglebulb;
-                  let bulbsRef = firebase.database().ref('listRooms/' + DBulbs[serialRoom][0] + '/listBulbs/' + item.bulbsID);
-                  bulbsRef.update({ status: item.status }).then().catch();
-                  setTogglebulb(loadpage);
-                }
-              }}
-              style={styles.ItemDevice}
-            >
-              <VDevice item={item} />
-            </TouchableOpacity>
+        <View style={{
+          flexDirection: 'row',
+        }}>
+          <Text style={( valuesSensor > parseInt(DBulbs[serialRoom][4]) - 10) && ( valuesSensor < parseInt(DBulbs[serialRoom][4]) + 10) 
+            ? { fontSize: 30, color: '#29c270', fontFamily: 'google-bold' }
+            : { fontSize: 30, color: '#c22929', fontFamily: 'google-bold' }}>
+            {valuesSensor}
+          </Text>
+          <Text style={{ fontSize: 25, color: '#404040', }}>
+            /
+          </Text>
+          <Text style={{ fontSize: 15, color: '#404040', fontFamily: 'google-bold', paddingTop: 15 }}>
+            intensity ({parseInt(DBulbs[serialRoom][4]) - 10} - {parseInt(DBulbs[serialRoom][4]) + 10})
+          </Text>
+        </View>
 
-          )}
-          numColumns={numcol}
-        />
-      </View> */}
+      </View>
 
       <View style={styles.boxOne}>
         <FlatGrid
@@ -608,7 +563,7 @@ function RoomScreen({ route, navigation }) {
                   }
                   var data = JSON.stringify(item);
                   const axios = require('axios');
-                  axios.post('http://192.168.1.17:8080/api', { data })
+                  axios.post('http://192.168.17.1:8080/api', { data })
                     .then(function (response) {
                       //console.log(response);
                     })
@@ -635,18 +590,22 @@ function RoomScreen({ route, navigation }) {
                       bulbRoot = bulbRootTmp[0];
                     }
                     // console.log(bulbRoot);
-                    let bulbHisRef = firebase.database().ref('users/' + userId + '/listRooms/' + bulbRoot + '/listUserHistory/' + uuid.v4());
+                    let time = new Date();
+                    let currentDate = time.toISOString().split('T')[0];
+                    let currentTime = time.toLocaleTimeString('en-US', { hour12: false });
+                    let idHistory = currentDate+"_"+currentTime;
+                    let bulbHisRef = firebase.database().ref('users/' + userId + '/listRooms/' + bulbRoot + '/listUserHistory/' + idHistory);
                     if (item.status) {
                       bulbHisRef.set({
                         action: 'Turn on',
-                        dateTime: date.getHours() + ':' + date.getMinutes() + ' ' + months[date.getMonth()] + ' ' + date.getDay() + ' ' + date.getFullYear(),
+                        dateTime: date.getHours() + ':' + date.getMinutes() + ' ' + months[date.getMonth()] + ' ' + date.getDate() + ' ' + date.getFullYear(),
                         room: item.bulbsName,
                         status: 'on'
                       })
                     } else {
                       bulbHisRef.set({
                         action: 'Turn off',
-                        dateTime: date.getHours() + ':' + date.getMinutes() + ' ' + months[date.getMonth()] + ' ' + date.getDay() + ' ' + date.getFullYear(),
+                        dateTime: date.getHours() + ':' + date.getMinutes() + ' ' + months[date.getMonth()] + ' ' + date.getDate() + ' ' + date.getFullYear(),
                         room: item.bulbsName,
                         status: 'off'
                       })
@@ -655,11 +614,11 @@ function RoomScreen({ route, navigation }) {
                     item = {
                       device_key: item.bulbsID,
                       device_id: item.bulbsName,
-                      values: [item.status ?  "1" : "0", item.valueS]
+                      values: [item.status ? "1" : "0", item.valueS]
                     }
                     var data = JSON.stringify(item);
                     const axios = require('axios');
-                    axios.post('http://192.168.1.17:8080/api', { data })
+                    axios.post('http://192.168.17.1:8080/api', { data })
                       .then(function (response) {
                         //console.log(response);
                       })
@@ -717,7 +676,7 @@ function RoomScreen({ route, navigation }) {
       <View style={{ flex: 1, padding: 40, paddingLeft: '5%', backgroundColor: '#f5f5f5' }}>
 
         <View style={styles.header1}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             // onPress={() => setToogle(!toogle)}
             style={{
               width: 40,
@@ -749,7 +708,7 @@ function RoomScreen({ route, navigation }) {
               resizeMode='contain'
               style={{ width: '40%' }}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             onPress={() => {
@@ -864,19 +823,21 @@ function Account() {
   const [phone, setPhone] = useState(user.getPhone);
 
   const UpdateUserData = () => {
-    firebase.database().ref('users/1').update({
+    firebase.database().ref('users/'+userId).update({
       fullname: fullname,
       email: email,
       phone: phone,
       username: username,
     });
+
+    Alert.alert("Update successful");
   }
   return (
     <KeyboardAwareScrollView style={{ flex: 1 }}>
       <View style={styles.container}>
 
         <View style={styles.header1}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             // onPress={() => setToogle(!toogle)}
             style={{
               width: 40,
@@ -908,7 +869,7 @@ function Account() {
               resizeMode='contain'
               style={{ width: '40%' }}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             onPress={() => {
@@ -1172,17 +1133,19 @@ function History() {
       //setSerialDate(Object.entries(value).map(item => item[0]).length-1);
       serialDate = Object.entries(value).map(item => item[0]).length - 1;
     }
-    if(!listAllSensorHistory.includes(currentDate) && listAllSensorHistory.length > 0 ){
+    if (!listAllSensorHistory.includes(currentDate) && listAllSensorHistory.length > 0) {
       listAllSensorHistory.push(currentDate);
       serialDate += 1;
     }
-    else if (!listAllSensorHistory.includes(currentDate) && listAllSensorHistory.length == 0){
+    else if (!listAllSensorHistory.includes(currentDate) && listAllSensorHistory.length == 0) {
       listAllSensorHistory.push(currentDate);
     }
   }
-  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory').on('value', function (snapshot) {
-    handleSensorHistory(snapshot.val() != undefined ? snapshot.val() : {});
-  });
+  if(DBulbs[serialRoom]!= undefined){
+    firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory').on('value', function (snapshot) {
+      handleSensorHistory(snapshot.val() != undefined ? snapshot.val() : {});
+    });
+  }
   //console.log(allSensorHistory);
   // console.log(listAllSensorHistory);
   // console.log(serialDate+"-----");
@@ -1194,12 +1157,15 @@ function History() {
       setSensorHistory(value);
     }
   }
-  
+
   //var valuesSensor = ''; 
-  firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory/' + listAllSensorHistory[serialDate] ).on('value', function (snapshot) {
-    //console.log(snapshot.val());
-    handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
-  });
+  if(DBulbs[serialRoom]!= undefined){
+    firebase.database().ref('listSensors/' + DBulbs[serialRoom][3] + '/sensorHistory/' + listAllSensorHistory[serialDate]).on('value', function (snapshot) {
+      //console.log(snapshot.val());
+      handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
+    });
+  }
+  
   //console.log(sensorHistory)
   arrayTime = Object.entries(sensorHistory).map(item => item[0]);
   arrayLevelLight = Object.entries(sensorHistory).map(item => item[1]);
@@ -1279,6 +1245,16 @@ function History() {
     if (serialRoom > 0) {
       setNameRoom(DListRoomOfUser.length != 0 ? DBulbs[serialRoom - 1][1] : '');
       nameOfRoom = DListRoomOfUser.length != 0 ? DBulbs[serialRoom - 1][1] : '';
+      DListhistory = Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
+        DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
+        {
+          "history": {
+            "action": "",
+            "dateTime": "null",
+            "room": "",
+            "status": ""
+          },
+        }).map(item => item[1]);
       // DListhistory = DListRoomOfUser.length != 0 ? Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
       //   DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
       //   {
@@ -1298,7 +1274,7 @@ function History() {
         var time = new Date();
         var currentDate = time.toISOString().split('T')[0];
         //var valuesSensor = ''; 
-        firebase.database().ref('listSensors/' + DBulbs[serialRoom-1][3] + "/sensorHistory/" + currentDate).on('value', function (snapshot) {
+        firebase.database().ref('listSensors/' + DBulbs[serialRoom - 1][3] + "/sensorHistory/" + currentDate).on('value', function (snapshot) {
           //console.log(snapshot.val());
           handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
         });
@@ -1334,6 +1310,16 @@ function History() {
     if (serialRoom < (DBulbs.length - 1)) {
       setNameRoom(DListRoomOfUser.length != 0 ? DBulbs[serialRoom + 1][1] : '');
       nameOfRoom = DListRoomOfUser.length != 0 ? DBulbs[serialRoom + 1][1] : '';
+      DListhistory = Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
+        DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
+        {
+          "history": {
+            "action": "",
+            "dateTime": "null",
+            "room": "",
+            "status": ""
+          },
+        }).map(item => item[1]);
       // DListhistory = DListRoomOfUser.length != 0 ? Object.entries(DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory != undefined ?
       //   DListRoomOfUser.map(item => item[1])[DListNameRoom.indexOf(nameOfRoom)].listUserHistory :
       //   {
@@ -1354,7 +1340,7 @@ function History() {
         var currentDate = time.toISOString().split('T')[0];
         //var valuesSensor = ''; 
         //console.log(currentDate);
-        firebase.database().ref('listSensors/' + DBulbs[serialRoom+1][3] + "/sensorHistory/" + currentDate).on('value', function (snapshot) {
+        firebase.database().ref('listSensors/' + DBulbs[serialRoom + 1][3] + "/sensorHistory/" + currentDate).on('value', function (snapshot) {
           //console.log(snapshot.val());
           handleGetValue(snapshot.val() != undefined ? snapshot.val() : {});
         });
@@ -1399,7 +1385,7 @@ function History() {
     <View style={styles.container}>
 
       <View style={styles.header1}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           // onPress={() => setToogle(!toogle)}
           style={{
             width: 40,
@@ -1431,7 +1417,7 @@ function History() {
             resizeMode='contain'
             style={{ width: '40%' }}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity
           onPress={() => {
@@ -1505,7 +1491,7 @@ function History() {
         <Text
           style={{ fontSize: 16, fontFamily: 'google-bold', color: '#404040' }}
 
-        > {listAllSensorHistory[serialDate] } </Text>
+        > {listAllSensorHistory[serialDate]} </Text>
         <TouchableOpacity
           onPress={changeDateRight}
           style={styles.btnleftright}
@@ -1523,7 +1509,7 @@ function History() {
         height: 124
       }}>
         <CustomListview style={styles.customList}
-          itemList={DListhistory}
+          itemList={DListhistory.length > 5 ? [...DListhistory].reverse().slice(0,6) : [...DListhistory].reverse()}
         />
       </View>
       {/* <View style={styles.changeHistory}>
@@ -1577,11 +1563,11 @@ function History() {
       </View>
 
     </View>
-  ) :
+  ) : (DListRoomOfUser.length!=0) ?
     (<View style={styles.container}>
 
       <View style={styles.header1}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           // onPress={() => setToogle(!toogle)}
           style={{
             width: 40,
@@ -1613,7 +1599,7 @@ function History() {
             resizeMode='contain'
             style={{ width: '40%' }}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity
           onPress={() => {
@@ -1757,7 +1743,94 @@ function History() {
       </View>
 
 
-    </View>);
+    </View>) :
+    (
+      <View style={{ flex: 1, padding: 40, paddingLeft: '5%', backgroundColor: '#f5f5f5' }}>
+
+        <View style={styles.header1}>
+          {/* <TouchableOpacity
+            // onPress={() => setToogle(!toogle)}
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: '#e7e6e6',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 40,
+              marginStart: 170
+            }}>
+            <Image
+              source={require('./assets/refresh.png')}
+              resizeMode='contain'
+              style={{ width: '50%' }}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{
+            width: 40,
+            height: 40,
+            backgroundColor: '#e7e6e6',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 40,
+            marginStart: 10
+          }}>
+            <Image
+              source={require('./assets/notifi.png')}
+              resizeMode='contain'
+              style={{ width: '40%' }}
+            />
+          </TouchableOpacity> */}
+
+          <TouchableOpacity
+            onPress={() => {
+              roomDataOfUser = [];
+              DBulbs = [];
+              DSchedules = [];
+              DListRoomOfUser = [];
+              DListhistory = [];
+              //DListIdRoom = [];
+              nameOfRoom = [];
+              DSystemHistory = [];
+              listSystemHistory = [];
+              //arrayTime = [];
+              arrayLevelLight = [];
+              navi.navigate('Home');
+            }}
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: '#e7e6e6',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 40,
+              marginStart: 10
+            }}>
+            <Image
+              source={require('./assets/logout.png')}
+              resizeMode='contain'
+              style={{ width: '50%' }}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <Image
+          source={require('./assets/manageHistory.png')}
+          resizeMode='contain'
+          style={{ width: '70%' }}
+        />
+
+        <View
+          style={styles.titleR}
+        >
+          <View style={[styles.titleC, { alignItems: 'center' }]}>
+            <Text
+              style={{ fontSize: 14, fontFamily: 'google-bold', color: '#808080', textAlign: 'center' }}
+            >No data</Text>
+          </View>
+        </View>
+      </View >
+    );;
 }
 
 
@@ -2146,12 +2219,12 @@ const styles = StyleSheet.create({
     height: 60,
     backgroundColor: '#f5f5f5',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
   },
   boxOne: {
     // flex: 1,
     width: '100%',
-    height: 190,
+    height: 220,
     backgroundColor: '#f5f5f5',
     // paddingTop: 20,
     // paddingStart: 10,

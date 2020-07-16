@@ -96,7 +96,7 @@ export default function ManageAccount({ navigation }) {
             <View style={styles.container}>
 
                 <View style={styles.header}>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         onPress={() => setToogle(!toogle)}
                         style={{
                             width: 40,
@@ -128,7 +128,7 @@ export default function ManageAccount({ navigation }) {
                             resizeMode='contain'
                             style={{ width: '40%' }}
                         />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <TouchableOpacity
                         onPress={() => navigation.navigate('Home')}
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
         height: 60,
         backgroundColor: '#f5f5f5',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
     },
     container: {
         flex: 1,
