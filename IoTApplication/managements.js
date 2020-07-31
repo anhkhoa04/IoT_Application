@@ -563,7 +563,7 @@ function RoomScreen({ route, navigation }) {
                   }
                   var data = JSON.stringify(item);
                   const axios = require('axios');
-                  axios.post('http://192.168.17.1:8080/api', { data })
+                  axios.post('http://192.168.1.17:8080/api', { data })
                     .then(function (response) {
                       //console.log(response);
                     })
@@ -618,7 +618,7 @@ function RoomScreen({ route, navigation }) {
                     }
                     var data = JSON.stringify(item);
                     const axios = require('axios');
-                    axios.post('http://192.168.17.1:8080/api', { data })
+                    axios.post('http://192.168.1.17:8080/api', { data })
                       .then(function (response) {
                         //console.log(response);
                       })

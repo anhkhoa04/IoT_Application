@@ -20,6 +20,7 @@ export default function ManageAccount({ navigation }) {
     const [openModal, setOpenModal] = useState(false);
 
     useEffect(() => {
+
         BackHandler.addEventListener("hardwareBackPress", function () { return true; });
 
         firebase.database().ref('/users').once('value', (snap) => {
@@ -214,8 +215,24 @@ export default function ManageAccount({ navigation }) {
                                         <View style={styles.option}>
                                             <TouchableOpacity
                                                 onPress={() => {
-                                                    remmoveNode(param.idRoot);
-                                                    setToogle(!toogle);
+                                                    Alert.alert(
+                                                        'Confirmation ',
+                                                        'Are you want to remove this account?',
+                                                        [
+                                                          {
+                                                            text: 'Cancel',
+                                                            onPress: () => console.log('Cancel Pressed'),
+                                                            style: 'cancel'
+                                                          },
+                                                          { text: 'OK', onPress: () => {
+                                                            remmoveNode(param.idRoot);
+                                                            setToogle(!toogle);
+                                                            navigation.navigate('ManageAccount');
+                                                          } }
+                                                        ],
+                                                        { cancelable: false }
+                                                      );
+                                                    
                                                 }}
                                                 style={{
                                                     width: 130,

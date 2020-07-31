@@ -14,7 +14,8 @@ export default function ManageAccount({ navigation }) {
 
 
     const [fontLoaded, setFontLoaded] = useState(false);
-    const [toogle, setToogle] = useState('false');
+    const [toogle, setToogle] = useState(false);
+    const [users, setUsers] = useState([]);
     const [rooms, setRooms] = useState([]);
     const [bulbs, setBulbs] = useState([]);
     const [roomChoose, setRoomChoose] = useState('');
@@ -24,11 +25,18 @@ export default function ManageAccount({ navigation }) {
     const [firstPush, setFirstPush] = useState(true);
 
     useEffect(() => {
+        firebase.database().ref('/users').once('value', (snap) => {
+            if (snap.val() != null) {
+                setUsers(Object.entries(snap.val()).map(item => item[1]));
+            }
+        });
+
         firebase.database().ref('/listRooms').once('value', (snap) => {
             if (snap.val() != null) {
                 setRooms(Object.entries(snap.val()).map(item => item[1]));
             }
         });
+
     }, [toogle]);
 
     const emptyAdd = (param) => {
@@ -36,6 +44,42 @@ export default function ManageAccount({ navigation }) {
         dataTmp.push({});
         return dataTmp;
     };
+    
+    const getKeyByRoomNameInListRoom = (roomNameParam) => {
+        const objFinder = rooms.find(item => item.roomsName == roomNameParam);
+        return [objFinder.roomsID,objFinder.lightSensorID];
+    }
+
+    const removeRoom = (roomNameParam) => {
+
+        // Delete room in list of rooms
+
+        let fKey = getKeyByRoomNameInListRoom(roomNameParam);
+        firebase.database().ref('/listRooms/' + fKey[0]).remove();
+
+        // Delete sensor in list of rooms
+
+        firebase.database().ref('/listSensors/' + fKey[1]).remove();
+
+        // Delete room in list of users
+        for(let i=0; i<users.length; i++){
+
+            let tmp = users[i];
+
+            if(tmp.listRooms == null || tmp.listRooms==undefined) continue;
+            let idRoot = tmp.idRoot;
+            let arrListRoom = Object.entries(tmp.listRooms);
+
+            const roomFinder = arrListRoom.find(item => item[1].roomsName == roomNameParam);
+
+            if(roomFinder!=null && roomFinder!=undefined){
+                firebase.database().ref('/users/' + idRoot + '/listRooms/' + roomFinder[0]).remove();
+            }
+        }
+
+        setToogle(!toogle);
+        navigation.navigate('ManageAccount');
+    }
 
     const updateIntensity = (roomIdParam, value) =>{
         firebase.database().ref('/listRooms/'+roomIdParam).update({
@@ -132,6 +176,7 @@ export default function ManageAccount({ navigation }) {
                         renderItem={({ item }) => (
                             <View >
                                 <TouchableOpacity
+                                    
                                     onPress={() => {
                                         setBulbVisible(true);
                                         setFirstPush(false);
@@ -148,6 +193,7 @@ export default function ManageAccount({ navigation }) {
                                         }
 
                                     }}
+
 
                                     style={(item.roomsName == roomChoose) ? styles.select : styles.noSelect}
                                 >
@@ -236,7 +282,7 @@ export default function ManageAccount({ navigation }) {
                         } : {
                             fontSize: 0
                         }}
-                    >Intensity</Text>
+                    >Intensity / Remove</Text>
                 </View>
                 
                 <View style={ styles.boxThree}>
@@ -249,7 +295,7 @@ export default function ManageAccount({ navigation }) {
                         style={roomChoose!='' ? {
                             fontFamily: 'google-bold',
                             fontSize: 20,
-                            width: 300,
+                            width: 245,
                             height: 45,
                             backgroundColor: '#e7e6e6',
                             borderRadius: 12,
@@ -261,6 +307,47 @@ export default function ManageAccount({ navigation }) {
                             height: 0,
                         }}
                     />
+
+                    <TouchableOpacity 
+                        onPress={() => {
+                            Alert.alert(
+                                'Confirmation ',
+                                'Are you want to remove this room?',
+                                [
+                                  {
+                                    text: 'Cancel',
+                                    onPress: () => console.log('Cancel Pressed'),
+                                    style: 'cancel'
+                                  },
+                                  { text: 'OK', onPress: () => removeRoom(roomChoose) }
+                                ],
+                                { cancelable: false }
+                              );
+                        }}
+
+                        style={ roomChoose!='' ? {
+                            width: 45,
+                            height: 45,
+                            backgroundColor: "#f55353",
+                            color: "#404040",
+                            marginStart: 10,
+                            borderRadius: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        } : {
+                            width: 0,
+                            height: 0
+                        }
+                        
+                    }>
+                        <Image source={require('./assets/bin.png')}
+                            style={{
+                                resizeMode: 'contain',
+                                width: 20,
+                                height: 20,
+                            }}
+                        />
+                    </TouchableOpacity>
                 </View>
 
                 {/* <View style={styles.boxTwo}>

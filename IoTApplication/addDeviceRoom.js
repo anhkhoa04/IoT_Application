@@ -201,6 +201,12 @@ export default function AddDeviceRoom({ navigation }) {
                         renderItem={({ item }) => (
                             <View>
                                 <TouchableOpacity
+                                    onPress={() => {
+                                        let tmp = resBulb;
+                                        tmp = tmp.filter(el => el != item)
+                                        setResBulb(tmp);
+                                        setToogle(!toogle); 
+                                    }}
                                     style={styles.on}
                                 >
                                     <Image
@@ -235,7 +241,7 @@ export default function AddDeviceRoom({ navigation }) {
                                 addRoomData(roomName, sensorID, id, intensity);
                                 addSensorData(sensorID);
                                 resBulb.map(item => addBulbData(item, id));
-                                navigation.navigate('ManageDevice')
+                                navigation.navigate('ManageAccount');
                             }
                         }}
                         style={{
